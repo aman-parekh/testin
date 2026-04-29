@@ -1,0 +1,90 @@
+name: 🔄 Auto-Rollback on Main Failure
+
+# ─────────────────────────────────────────────────────────────────────────────
+# If CI fails on main (after a Claude-authored squash merge), this workflow
+# automatically reverts the offending commit and opens a GitHub Issue with
+# the failure details so a human can investigate.
+# ─────────────────────────────────────────────────────────────────────────────
+on:
+  push:
+    branches: [main]
+
+jobs:
+  guard:
+    name: Verify main branch health
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2          # need HEAD and HEAD~1 for revert
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('**/*.gradle*') }}
+
+      - name: Grant execute permission
+        run: chmod +x gradlew
+
+      - name: Build & test (fast check)
+        id: ci
+        continue-on-error: true
+        run: ./gradlew assembleDebug test --no-daemon
+
+      # ── Rollback ──────────────────────────────────────────────────────────
+      - name: Revert last commit on failure
+        if: steps.ci.outcome == 'failure'
+        run: |
+          git config user.name  "Claude Agent [bot]"
+          git config user.email "claude-agent@users.noreply.github.com"
+          FAILED_SHA=$(git rev-parse HEAD)
+          git revert --no-commit HEAD
+          git commit -m "revert: auto-rollback ${FAILED_SHA:0:7} — CI failure on main [skip ci]"
+          git push origin main
+          echo "FAILED_SHA=$FAILED_SHA" >> $GITHUB_ENV
+
+      - name: Open incident issue on failure
+        if: steps.ci.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sha = process.env.FAILED_SHA || 'unknown';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              title: `🚨 Auto-rollback triggered — main CI failure (${sha.slice(0,7)})`,
+              labels: ['incident', 'claude: rollback'],
+              body: [
+                '## ⚠️ Automatic Rollback Triggered',
+                '',
+                `The commit \`${sha}\` broke the \`main\` branch CI pipeline.`,
+                `The offending commit has been **automatically reverted**.`,
+                '',
+                `| Field | Value |`,
+                `|-------|-------|`,
+                `| Failed commit | \`${sha}\` |`,
+                `| Actions run | [View logs](${runUrl}) |`,
+                `| Triggered at | ${new Date().toISOString()} |`,
+                '',
+                '### Next steps',
+                '1. Review the Actions log linked above',
+                '2. Identify the root cause',
+                '3. Fix the issue manually and open a new PR, OR',
+                '4. Re-label the original issue with `claude: fix` for Claude to retry',
+              ].join('\n'),
+            });

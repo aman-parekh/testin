@@ -1,0 +1,100 @@
+name: 🐛 Bug Report
+description: Report a bug — Claude will automatically diagnose and fix it.
+title: "[BUG] "
+labels:
+  - bug
+  - "claude: fix"
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🤖 Claude Agent — Bug Report
+        Fill in this form as clearly as possible. Claude reads every field when
+        diagnosing the bug. The more detail you provide, the better the fix.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What went wrong?
+      description: A clear description of the bug.
+      placeholder: "e.g. The app crashes with a NullPointerException when the user taps 'Login' after entering a blank password."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Exact steps that trigger the bug.
+      placeholder: |
+        1. Launch the app
+        2. Navigate to Login screen
+        3. Leave the password field blank
+        4. Tap Login
+        5. App crashes
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behaviour
+      placeholder: "A validation error should appear: 'Password cannot be empty'."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behaviour
+      description: Include crash logs, stack traces, or error messages if available.
+      placeholder: |
+        App crashes with:
+        java.lang.NullPointerException: password must not be null
+          at com.example.LoginViewModel.validate(LoginViewModel.kt:47)
+    validations:
+      required: true
+
+  - type: input
+    id: affected_files
+    attributes:
+      label: Likely Affected File(s)
+      description: Optional but helps Claude focus on the right code.
+      placeholder: "app/src/main/java/com/example/login/LoginViewModel.kt"
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - "🔴 Critical — app crashes / data loss"
+        - "🟠 High — feature completely broken"
+        - "🟡 Medium — degraded experience"
+        - "🟢 Low — cosmetic / minor"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: How often does this happen?
+      options:
+        - "Always (100%)"
+        - "Often (>50%)"
+        - "Sometimes (~25%)"
+        - "Rarely (<10%)"
+    validations:
+      required: true
+
+  - type: input
+    id: android_version
+    attributes:
+      label: Android Version / Device
+      placeholder: "Android 14, Pixel 7 Pro"
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Screenshots, recordings, related issues, previous fixes attempted.

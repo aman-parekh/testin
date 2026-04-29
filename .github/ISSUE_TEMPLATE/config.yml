@@ -1,0 +1,6 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: 📖 Agent Documentation
+    url: https://github.com/YOUR_ORG/YOUR_REPO/blob/main/CLAUDE_RULES.md
+    about: Read the full Claude Agent design system and coding rules.

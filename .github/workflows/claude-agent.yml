@@ -1,0 +1,74 @@
+name: 🤖 Claude AI Agent
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Triggers when a maintainer adds 'claude: fix' or 'claude: implement'
+# to an issue.  Only these two labels activate the agent; any other
+# label events are silently ignored.
+# ─────────────────────────────────────────────────────────────────────────────
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  claude-agent:
+    name: "Claude — ${{ github.event.label.name }}"
+    if: |
+      github.event.label.name == 'claude: fix' ||
+      github.event.label.name == 'claude: implement'
+
+    runs-on: ubuntu-latest
+
+    # Permissions needed:
+    #   contents       → create branches, read/write files
+    #   issues         → post comments, add labels
+    #   pull-requests  → create PRs, enable auto-merge
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      # ── Checkout ─────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Python runtime ───────────────────────────────────────────────────
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('scripts/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      # ── Run Claude Agent ─────────────────────────────────────────────────
+      - name: Run Claude Agent
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN:      ${{ secrets.GITHUB_TOKEN }}
+          REPO_NAME:         ${{ github.repository }}
+          ISSUE_NUMBER:      ${{ github.event.issue.number }}
+          ISSUE_LABEL:       ${{ github.event.label.name }}
+          # Optional overrides (set as repo variables if needed)
+          CLAUDE_MODEL:      ${{ vars.CLAUDE_MODEL || 'claude-opus-4-6' }}
+          CLAUDE_MAX_TOKENS: ${{ vars.CLAUDE_MAX_TOKENS || '8192' }}
+        run: python scripts/claude_agent.py
+
+      # ── Upload logs on failure ───────────────────────────────────────────
+      - name: Upload agent logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-agent-logs-${{ github.event.issue.number }}
+          path: /tmp/claude_agent_*.log
+          retention-days: 7
