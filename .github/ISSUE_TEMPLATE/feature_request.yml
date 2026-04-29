@@ -8,18 +8,13 @@ labels:
 body:
   - type: markdown
     attributes:
-      value: |
-        ## 🤖 Claude Agent — Feature Request
-        Describe the feature clearly. Claude reads every field when planning the
-        implementation. Specific UI descriptions and acceptance criteria will
-        produce the best results.
+      value: "## 🤖 Claude Code Agent — Feature Request\nDescribe the feature clearly. Claude reads every field."
 
   - type: textarea
     id: summary
     attributes:
       label: Feature Summary
-      description: What do you want built?
-      placeholder: "e.g. Add a profile screen where users can view and edit their display name, avatar, and bio."
+      placeholder: "e.g. Add a profile screen where users can view and edit their display name and avatar."
     validations:
       required: true
 
@@ -29,7 +24,7 @@ body:
       label: User Story
       placeholder: |
         As a logged-in user,
-        I want to view and edit my profile details,
+        I want to view and edit my profile,
         So that I can personalise my account.
     validations:
       required: true
@@ -38,12 +33,11 @@ body:
     id: acceptance_criteria
     attributes:
       label: Acceptance Criteria
-      description: Tick-box list of conditions that must be true for this to be 'done'.
       placeholder: |
-        - [ ] Profile screen is accessible from the home screen via the avatar icon
-        - [ ] Display name can be edited inline with a 32-character limit
-        - [ ] Changes are persisted after app restart
-        - [ ] Loading and error states are handled gracefully
+        - [ ] Profile screen accessible from home screen
+        - [ ] Display name editable with 32-character limit
+        - [ ] Changes persisted after app restart
+        - [ ] Loading and error states handled
     validations:
       required: true
 
@@ -51,27 +45,19 @@ body:
     id: ui_description
     attributes:
       label: UI / UX Description
-      description: |
-        Describe the visual design. Remember the app uses a gradient design system —
-        Claude will apply primary/accent gradients automatically. Describe layout,
-        component positions, animations, and interactions.
+      description: Describe the layout and interactions. Claude applies gradients automatically.
       placeholder: |
-        - Full-screen with a deep indigo–violet vertical gradient background
-        - Circular avatar at the top (100dp) with a white border ring
-        - Edit pencil icon in the bottom-right corner of the avatar
-        - Name displayed in 24sp bold white text below the avatar
-        - Edit fields appear on tap with a slide-up animation
-        - Save button: primary gradient (indigo → violet) with white label
+        - Full-screen indigo–violet vertical gradient background
+        - Circular avatar (100dp) with white border at the top
+        - Name in 24sp bold white text below avatar
+        - Save button using primary gradient (indigo → violet)
 
   - type: textarea
     id: technical_notes
     attributes:
       label: Technical Notes
-      description: Architecture preferences, existing components to reuse, API endpoints, etc.
-      placeholder: |
-        - Reuse the existing UserRepository for persistence
-        - Avatar upload should use the /api/v1/users/avatar endpoint
-        - ViewModel should already exist at ProfileViewModel.kt (if not, create it)
+      description: Architecture notes, existing components to reuse, API endpoints, etc.
+      placeholder: "Reuse existing UserRepository. Avatar upload → /api/v1/users/avatar"
 
   - type: dropdown
     id: priority
@@ -83,13 +69,3 @@ body:
         - "🟢 Low — nice to have"
     validations:
       required: true
-
-  - type: dropdown
-    id: complexity
-    attributes:
-      label: Estimated Complexity
-      description: Your rough guess — Claude will adjust as needed.
-      options:
-        - "Small (1–2 files)"
-        - "Medium (3–5 files)"
-        - "Large (6+ files, new screen/flow)"
